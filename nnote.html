@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Study Planner</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+header {
+    background: #172554;
+    color: white;
+    padding: 25px;
+    text-align: center;
+}
+
+header h1 {
+    margin-bottom: 8px;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 30px auto;
+    padding: 15px;
+}
+
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.card {
+    background: white;
+    padding: 22px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px #0000000c;
+}
+
+.card h3 {
+    color: #64748b;
+    margin-bottom: 12px;
+}
+
+.card h2 {
+    color: #2563eb;
+    font-size: 30px;
+}
+
+.section {
+    background: white;
+    padding: 25px;
+    margin-bottom: 22px;
+    border-radius: 12px;
+}
+
+.section h2 {
+    margin-bottom: 18px;
+}
+
+input, textarea, select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    margin-bottom: 12px;
+    font-size: 15px;
+}
+
+textarea {
+    min-height: 110px;
+    resize: vertical;
+}
+
+button {
+    background: #2563eb;
+    color: white;
+    padding: 11px 18px;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    margin: 4px;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+.task {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 14px;
+    background: #f8fafc;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    flex-wrap: wrap;
+}
+
+.done {
+    text-decoration: line-through;
+    color: #94a3b8;
+}
+
+.delete {
+    background: #dc2626;
+}
+
+.progress {
+    background: #e2e8f0;
+    height: 12px;
+    border-radius: 10px;
+    margin-top: 12px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: #22c55e;
+    height: 100%;
+    width: 0%;
+}
+
+.note {
+    padding: 15px;
+    background: #eff6ff;
+    border-left: 4px solid #2563eb;
+    margin-bottom: 12px;
+    border-radius: 5px;
+    white-space: pre-wrap;
+}
+
+footer {
+    text-align: center;
+    padding: 25px;
+    color: #64748b;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>📚 My Study Planner</h1>
+    <p>Plan Your Study. Track Your Progress. Achieve Your Goals.</p>
+</header>
+
+<div class="container">
+
+    <div class="dashboard">
+
+        <div class="card">
+            <h3>Total Tasks</h3>
+            <h2 id="total">0</h2>
+        </div>
+
+        <div class="card">
+            <h3>Completed</h3>
+            <h2 id="completed">0</h2>
+        </div>
+
+        <div class="card">
+            <h3>Remaining</h3>
+            <h2 id="remaining">0</h2>
+        </div>
+
+        <div class="card">
+            <h3>Progress</h3>
+            <h2 id="percentage">0%</h2>
+        </div>
+
+    </div>
+
+    <!-- STUDY PLAN -->
+
+    <div class="section">
+
+        <h2>📅 Create Study Plan</h2>
+
+        <input type="text" id="subject"
+        placeholder="Subject name (e.g. Physics)">
+
+        <input type="text" id="topic"
+        placeholder="Topic name (e.g. Vector)">
+
+        <input type="date" id="date">
+
+        <input type="time" id="time">
+
+        <button onclick="addTask()">+ Add Study Task</button>
+
+        <div id="taskList"></div>
+
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+    </div>
+
+
+    <!-- STUDY NOTES -->
+
+    <div class="section">
+
+        <h2>📝 My Study Notes</h2>
+
+        <input type="text" id="noteSubject"
+        placeholder="Subject name">
+
+        <textarea id="noteText"
+        placeholder="Write what you studied today..."></textarea>
+
+        <button onclick="addNote()">Save Note</button>
+
+        <div id="notesList"></div>
+
+    </div>
+
+</div>
+
+<footer>
+    <p>My Personal Study Dashboard © 2026</p>
+</footer>
+
+
+<script>
+
+let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+let notes = JSON.parse(localStorage.getItem("notes")) || [];
+
+function saveData() {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+    localStorage.setItem("notes", JSON.stringify(notes));
+}
+
+function addTask() {
+
+    let subject = document.getElementById("subject").value;
+    let topic = document.getElementById("topic").value;
+    let date = document.getElementById("date").value;
+    let time = document.getElementById("time").value;
+
+    if (!subject || !topic || !date) {
+        alert("Please fill in subject, topic and date!");
+        return;
+    }
+
+    tasks.push({
+        subject,
+        topic,
+        date,
+        time,
+        completed: false
+    });
+
+    saveData();
+    renderTasks();
+
+    document.getElementById("subject").value = "";
+    document.getElementById("topic").value = "";
+    document.getElementById("date").value = "";
+    document.getElementById("time").value = "";
+}
+
+function toggleTask(index) {
+    tasks[index].completed = !tasks[index].completed;
+    saveData();
+    renderTasks();
+}
+
+function deleteTask(index) {
+    tasks.splice(index, 1);
+    saveData();
+    renderTasks();
+}
+
+function renderTasks() {
+
+    let list = document.getElementById("taskList");
+    list.innerHTML = "";
+
+    tasks.forEach((task, index) => {
+
+        let div = document.createElement("div");
+        div.className = "task";
+
+        let info = document.createElement("span");
+        info.textContent =
+            task.subject + " - " + task.topic +
+            " | " + task.date +
+            (task.time ? " | " + task.time : "");
+
+        if (task.completed) {
+            info.classList.add("done");
+        }
+
+        let controls = document.createElement("div");
+
+        let check = document.createElement("button");
+        check.textContent = task.completed ? "Undo" : "Complete";
+        check.onclick = () => toggleTask(index);
+
+        let del = document.createElement("button");
+        del.textContent = "Delete";
+        del.className = "delete";
+        del.onclick = () => deleteTask(index);
+
+        controls.append(check, del);
+        div.append(info, controls);
+        list.appendChild(div);
+
+    });
+
+    updateDashboard();
+}
+
+function updateDashboard() {
+
+    let total = tasks.length;
+    let completed = tasks.filter(t => t.completed).length;
+    let remaining = total - completed;
+
+    let percent = total === 0
+        ? 0
+        : Math.round((completed / total) * 100);
+
+    document.getElementById("total").textContent = total;
+    document.getElementById("completed").textContent = completed;
+    document.getElementById("remaining").textContent = remaining;
+    document.getElementById("percentage").textContent = percent + "%";
+
+    document.getElementById("progressBar").style.width =
+        percent + "%";
+}
+
+
+function addNote() {
+
+    let subject = document.getElementById("noteSubject").value;
+    let text = document.getElementById("noteText").value;
+
+    if (!subject || !text) {
+        alert("Please write your subject and notes!");
+        return;
+    }
+
+    notes.push({
+        subject,
+        text,
+        date: new Date().toLocaleDateString()
+    });
+
+    saveData();
+    renderNotes();
+
+    document.getElementById("noteSubject").value = "";
+    document.getElementById("noteText").value = "";
+}
+
+
+function deleteNote(index) {
+    notes.splice(index, 1);
+    saveData();
+    renderNotes();
+}
+
+
+function renderNotes() {
+
+    let list = document.getElementById("notesList");
+    list.innerHTML = "";
+
+    notes.forEach((note, index) => {
+
+        let div = document.createElement("div");
+        div.className = "note";
+
+        let title = document.createElement("h3");
+        title.textContent = note.subject;
+
+        let content = document.createElement("p");
+        content.textContent = note.text;
+
+        let date = document.createElement("small");
+        date.textContent = note.date;
+
+        let del = document.createElement("button");
+        del.textContent = "Delete Note";
+        del.className = "delete";
+        del.onclick = () => deleteNote(index);
+
+        div.append(title, content, date, document.createElement("br"), del);
+        list.appendChild(div);
+
+    });
+}
+
+
+// Load saved information
+
+renderTasks();
+renderNotes();
+
+</script>
+
+</body>
+</html>
